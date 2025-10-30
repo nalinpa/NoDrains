@@ -1,0 +1,7 @@
+ignoredBuiltDependencies:
+  - '@swc/core'
+  - esbuild
+  - lmdb
+
+onlyBuiltDependencies:
+  - sharp

@@ -1,31 +1,44 @@
 {
-  "name": "NoDrains",
-  "displayName": "No drains",
-  "version": "0.0.1",
-  "description": "NoDrains",
-  "author": "nalinpatelnz@protonmail.com",
+  "name": "wallet-detector",
+  "displayName": "Wallet Detector",
+  "version": "1.0.0",
+  "description": "Detects wallet connection capabilities on websites",
+  "author": "Your Name",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
-    "package": "plasmo package"
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
-    "plasmo": "0.90.5",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "plasmo": "^0.88.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
-    "@types/chrome": "0.0.258",
-    "@types/node": "20.11.5",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
-    "prettier": "3.2.4",
-    "typescript": "5.3.3"
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitest/coverage-v8": "^4.0.1",
+    "@vitest/ui": "^3.2.4",
+    "autoprefixer": "^10.4.21",
+    "jsdom": "^27.0.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.4"
   },
   "manifest": {
+    "permissions": [
+      "storage",
+      "tabs",
+      "activeTab"
+    ],
     "host_permissions": [
-      "https://*/*"
+      "<all_urls>"
     ]
   }
 }
