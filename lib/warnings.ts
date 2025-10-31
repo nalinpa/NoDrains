@@ -263,3 +263,197 @@ export function showDetectionWarning(method: string): void {
     document.addEventListener('DOMContentLoaded', showWarningElement)
   }
 }
+
+export function showTyposquatWarning(realSite: string, reason: string): void {
+  const showWarningElement = () => {
+    if (document.getElementById('eth-wallet-warning')) return
+
+    const warning = document.createElement('div')
+    warning.id = 'eth-wallet-warning'
+    warning.innerHTML = `
+      <style>
+        @keyframes pulseOrange {
+          0%, 100% { opacity: 0.97; }
+          50% { opacity: 1; }
+        }
+        @keyframes slideDown {
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      </style>
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(234, 88, 12, 0.98);
+        backdrop-filter: blur(10px);
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        animation: pulseOrange 2s infinite;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      ">
+        <div style="
+          background: white;
+          padding: 48px 60px;
+          border-radius: 24px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+          text-align: center;
+          max-width: 600px;
+          animation: slideDown 0.5s ease-out;
+        ">
+          <div style="
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulseOrange 1s infinite;
+          ">⚠️</div>
+          
+          <h1 style="
+            color: #ea580c;
+            font-size: 36px;
+            font-weight: 900;
+            margin: 0 0 16px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          ">SUSPICIOUS WEBSITE</h1>
+          
+          <p style="
+            color: #9a3412;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 24px 0;
+            line-height: 1.4;
+          ">
+            This looks like a fake version of a trusted site
+          </p>
+          
+          <div style="
+            background: #fff7ed;
+            border: 2px solid #fed7aa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: left;
+          ">
+            <p style="
+              color: #7c2d12;
+              font-size: 16px;
+              font-weight: 600;
+              margin: 0 0 16px 0;
+              line-height: 1.6;
+            ">
+              <strong style="display: block; margin-bottom: 12px; font-size: 18px; color: #ea580c;">🚨 Warning:</strong>
+              ${reason}
+            </p>
+            <p style="
+              color: #7c2d12;
+              font-size: 16px;
+              font-weight: 600;
+              margin: 16px 0 0 0;
+              line-height: 1.6;
+            ">
+              <strong style="display: block; margin-bottom: 8px;">✅ Real site:</strong>
+              <span style="
+                background: #22c55e;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 8px;
+                display: inline-block;
+                font-family: monospace;
+                font-size: 18px;
+              ">${realSite}</span>
+            </p>
+          </div>
+          
+          <div style="
+            background: #fef2f2;
+            border: 2px solid #fca5a5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: left;
+          ">
+            <p style="
+              color: #7f1d1d;
+              font-size: 15px;
+              font-weight: 600;
+              margin: 0;
+              line-height: 1.6;
+            ">
+              <strong style="display: block; margin-bottom: 10px;">⛔ DO NOT:</strong>
+              • Connect your wallet<br/>
+              • Sign any transactions<br/>
+              • Enter passwords or recovery phrases<br/>
+              • Download anything
+            </p>
+          </div>
+          
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button id="leave-site" style="
+              background: #ea580c;
+              color: #7c2d12;
+              border: none;
+              padding: 16px 32px;
+              border-radius: 12px;
+              font-size: 16px;
+              font-weight: 700;
+              cursor: pointer;
+              box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+              transition: all 0.2s;
+            ">
+              Go to trusted site
+            </button>
+            
+            <button id="close-eth-warning" style="
+              background: #6b7280;
+              color: white;
+              border: none;
+              padding: 16px 32px;
+              border-radius: 12px;
+              font-size: 16px;
+              font-weight: 700;
+              cursor: pointer;
+              transition: all 0.2s;
+            ">
+              I'll Be Careful
+            </button>
+          </div>
+        </div>
+      </div>
+    `
+    
+    document.body.appendChild(warning)
+    
+    const leaveButton = document.getElementById('leave-site')
+    if (leaveButton) {
+      leaveButton.addEventListener('mouseover', () => {
+        leaveButton.style.transform = 'scale(1.05)'
+      })
+      leaveButton.addEventListener('mouseout', () => {
+        leaveButton.style.transform = 'scale(1)'
+      })
+      leaveButton.addEventListener('click', () => {
+        window.history.pushState(null, '', realSite)
+        setTimeout(() => {
+          if (window.location.href === document.referrer || !document.referrer) {
+            window.close()
+          }
+        }, 100)
+      })
+    }
+    
+    document.getElementById('close-eth-warning')?.addEventListener('click', () => {
+      warning.remove()
+    })
+  }
+  
+  if (document.body) {
+    showWarningElement()
+  } else {
+    document.addEventListener('DOMContentLoaded', showWarningElement)
+  }
+}

@@ -1,5 +1,7 @@
+// content.ts
 import { getLists, isWhitelisted, isBlacklisted } from "./lib/storage"
-import { showBlacklistWarning, showDetectionWarning } from "./lib/warnings"
+import { showBlacklistWarning, showDetectionWarning, showTyposquatWarning } from "./lib/warnings"
+import { detectTyposquatting, detectHomographAttack } from "./lib/typosquatting"
 import {
   checkEthereumAccess,
   detectLibraries,
@@ -22,11 +24,10 @@ let detectionScore = 0
 let detectionReasons: string[] = []
 let isWhitelistedSite = false
 let isBlacklistedSite = false
-let isEnabled = true // Default to enabled
+let isEnabled = true
 
 console.log('[Wallet Detector] Starting on:', window.location.hostname)
 
-// Check whitelist/blacklist AND enabled state
 async function checkLists() {
   const hostname = window.location.hostname.toLowerCase()
   
@@ -34,7 +35,6 @@ async function checkLists() {
     const lists = await getLists()
     const settings = await chrome.storage.local.get(['enabled'])
     
-    // Check if extension is enabled (defaults to true if not set)
     isEnabled = settings.enabled !== false
     
     isWhitelistedSite = isWhitelisted(hostname, lists.whitelist)
@@ -44,7 +44,31 @@ async function checkLists() {
     console.log('[Wallet Detector] Whitelisted:', isWhitelistedSite)
     console.log('[Wallet Detector] Blacklisted:', isBlacklistedSite)
     
-    // Only show blacklist warning if extension is enabled
+    // Check for typosquatting FIRST (highest priority)
+    if (isEnabled && !isWhitelistedSite && !isBlacklistedSite) {
+      const typosquatResult = detectTyposquatting(hostname, lists.whitelist)
+      
+      if (typosquatResult.isTyposquat) {
+        console.log('[Wallet Detector] 🚨 TYPOSQUAT DETECTED:', typosquatResult)
+        showTyposquatWarning(
+          typosquatResult.suspectedTarget || 'a trusted site',
+          typosquatResult.reason || 'This domain looks suspicious'
+        )
+        return
+      }
+      
+      // Check for homograph attacks (unicode lookalikes)
+      if (detectHomographAttack(hostname)) {
+        console.log('[Wallet Detector] 🚨 HOMOGRAPH ATTACK DETECTED')
+        showTyposquatWarning(
+          'the legitimate site',
+          'This domain uses suspicious lookalike characters. This is a common phishing technique.'
+        )
+        return
+      }
+    }
+    
+    // Then check blacklist
     if (isBlacklistedSite && isEnabled) {
       showBlacklistWarning()
     }
@@ -55,17 +79,14 @@ async function checkLists() {
 
 checkLists()
 
-// Detection callback - checks if enabled before triggering
 const triggerDetection: DetectionCallback = (method: string, score: number) => {
   if (web3Detected) return
   
-  // CRITICAL: Skip if extension is disabled
   if (!isEnabled) {
     console.log('[Wallet Detector] Extension is disabled, skipping detection')
     return
   }
   
-  // Skip if whitelisted
   if (isWhitelistedSite) {
     console.log('[Wallet Detector] Site is whitelisted, skipping detection')
     return
@@ -83,7 +104,6 @@ const triggerDetection: DetectionCallback = (method: string, score: number) => {
   }
 }
 
-// Listen for messages from injected scripts
 window.addEventListener('message', (event) => {
   if (event.source !== window) return
   
@@ -93,7 +113,6 @@ window.addEventListener('message', (event) => {
   }
 })
 
-// Listen for list updates (when user changes settings)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'LISTS_UPDATED') {
     console.log('[Wallet Detector] Settings updated, reloading page...')
@@ -101,7 +120,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 })
 
-// Initialize all detection methods
 checkEthereumAccess(triggerDetection)
 interceptNetwork(triggerDetection)
 detectLibraries(triggerDetection)
