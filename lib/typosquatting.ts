@@ -48,6 +48,7 @@ export function detectTyposquatting(
   whitelist: string[]
 ): { isTyposquat: boolean; suspectedTarget?: string; reason?: string } {
   
+  console.log('Detecting typosquatting for:', currentDomain)
   const currentBrand = extractBrandName(currentDomain)
   const currentLower = currentDomain.toLowerCase()
   
@@ -96,7 +97,8 @@ export function detectTyposquatting(
     // Check 4: Subdomain or path containing whitelisted domain
     // e.g., "sites.google.com/uniswap", "scam.com/uniswap"
     const urlPath = window.location.href.toLowerCase()
-    if (urlPath.includes(whitelistedBrand) && !currentLower.endsWith(whitelistedLower)) {
+
+    if (whitelistedBrand.length >= 5 && urlPath.includes(whitelistedBrand) && !currentLower.endsWith(whitelistedLower)) {
       return {
         isTyposquat: true,
         suspectedTarget: whitelistedDomain,

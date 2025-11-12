@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import "./style.css"
 
+import { ensureDefaults } from "./lib/storage"
+
 function IndexPopup() {
   const [currentDomain, setCurrentDomain] = useState<string>("")
   const [whitelist, setWhitelist] = useState<string[]>([])
@@ -25,6 +27,7 @@ function IndexPopup() {
 
   const loadSettings = async () => {
     try {
+      await ensureDefaults()
       const result = await chrome.storage.local.get(['whitelist', 'blacklist', 'enabled'])
       setWhitelist(result.whitelist || [])
       setBlacklist(result.blacklist || [])
@@ -41,12 +44,21 @@ function IndexPopup() {
     notifyContentScript()
   }
 
+  const reloadCurrentTab = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.reload(tabs[0].id)
+      }
+    })
+  }
+
   const addToWhitelist = async (domain: string) => {
     if (whitelist.includes(domain)) return
     const updated = [...whitelist, domain]
     await chrome.storage.local.set({ whitelist: updated })
     setWhitelist(updated)
     notifyContentScript()
+    reloadCurrentTab() 
   }
 
   const addToBlacklist = async (domain: string) => {
@@ -55,6 +67,7 @@ function IndexPopup() {
     await chrome.storage.local.set({ blacklist: updated })
     setBlacklist(updated)
     notifyContentScript()
+    reloadCurrentTab() 
   }
 
   const removeFromWhitelist = async (domain: string) => {
@@ -62,6 +75,7 @@ function IndexPopup() {
     await chrome.storage.local.set({ whitelist: updated })
     setWhitelist(updated)
     notifyContentScript()
+    reloadCurrentTab() 
   }
 
   const removeFromBlacklist = async (domain: string) => {
@@ -69,6 +83,7 @@ function IndexPopup() {
     await chrome.storage.local.set({ blacklist: updated })
     setBlacklist(updated)
     notifyContentScript()
+    reloadCurrentTab() 
   }
 
   const notifyContentScript = () => {
